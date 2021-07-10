@@ -7,6 +7,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 public class Project3Test{
     @Test
     public void test123(){
-
+        int x = 1;
+        int y = 1;
+        assertFalse(x == y);
     }
 }
