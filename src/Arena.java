@@ -1,3 +1,4 @@
+import java.util.Objects;
 import java.util.Scanner;
 
 public class Arena {
@@ -13,10 +14,11 @@ public class Arena {
     //Game states
     boolean isPlayerTurn = true;
     boolean playerQuit = false;
-    int monsterCreateChance = 25;
+    final int MONSTERCREATECHANCE = 25;
 
     //Stats
     int turn = 0;
+    int difficulty = 0;
     int monstersSlain = 0;
 
     //Scanner for detecting user input
@@ -31,7 +33,7 @@ public class Arena {
         this.east = new Queue<Creature>();
         this.south = new Queue<Creature>();
         this.west = new Queue<Creature>();
-        createMonster();
+        createMonsters(this.difficulty);
     }
 
     /**
@@ -48,20 +50,20 @@ public class Arena {
                 monsterTurn();
             }
         }
-        System.out.println("Game over!");
+        System.out.println("Game over! You lasted " + turn + " turns and slayed " + monstersSlain + "monsters");
     }
 
     /**
      * Allow player to select action for their turn
      */
     void playerTurn(){
-        turn++;
+        incrementTurn();
         describeArenaState();
         //If you are frozen the turn ends right here;
         if (player.isFrozen())
         {
             System.out.println("You are frozen and spend the turn thawing out.");
-            player.isFrozen = false;
+            player.isFrozen -= 1;
             this.isPlayerTurn = false;
             return;
         }
@@ -70,7 +72,7 @@ public class Arena {
         switch (s.toLowerCase())
         {
             case "attack":
-                System.out.println("player attacks here");
+                playerSelectAttack();
                 break;
             case "spell":
                 System.out.println("player spells go here");
@@ -86,26 +88,75 @@ public class Arena {
         this.isPlayerTurn = false;
     }
 
+    void playerSelectAttack(){
+        Queue<Creature> target = null;
+        while (Objects.isNull(target))
+        {
+            System.out.println("Which direction will you attack?");
+            String s = scan.next();
+            switch (s.toLowerCase()){
+                case "north":
+                    target = this.north;
+                    break;
+                case "west":
+                    target = this.west;
+                    break;
+                case "south":
+                    target = this.south;
+                    break;
+                case "east":
+                    target = this.east;
+                    break;
+                default:
+                    System.out.println("Please input North, South, East, or West.");
+            }
+        }
+        Creature attacked = target.peek();
+        int damage = player.attack(attacked);
+        System.out.println("You deal " + damage + " damage to " + attacked.toString() + "!");
+        if (attacked.isDead()){
+            System.out.println(attacked.toString() + " has been slain!");
+            target.dequeue();
+            monstersSlain++;
+        };
+    }
+
     
 
     /**
      * Determine action taken by monsters
      */
     void monsterTurn(){
-        System.out.println("monster turn goes here");
-        createMonster();
+        monsterAttack("North", north);
+        monsterAttack("East", east);
+        monsterAttack("South", south);
+        monsterAttack("West", west);
+        player.setDamageDesc();
+        if ("" != player.damageDesc)
+        {
+            System.out.println("You are feeling " + player.damageDesc);
+        }
+        createMonsters(this.difficulty);
         this.isPlayerTurn = true;
+    }
+
+    void monsterAttack(String label, Queue<Creature> direction){
+        if (direction.size > 0){
+            Creature monster = direction.peek();
+            int damage = monster.attack(player);
+            System.out.println(monster.toString() + " does " + damage + " damage to you from the " + label);
+        }
     }
 
     /**
      * Chance to randomly create monster in each direction
      */
-    void createMonster(){
+    void createMonsters(int difficulty){
         for (int i = 0; i < 4; i++)
         {
             int roll = App.generateRandom(1, 100);
-            if (roll <= monsterCreateChance){
-                Creature c = new Creature();
+            if (roll <= MONSTERCREATECHANCE){
+                Creature c = new Creature(difficulty);
                 switch (i){
                     case 0:
                         north.enqueue(c);
@@ -140,6 +191,11 @@ public class Arena {
         }
     }
 
+    private void incrementTurn(){
+        turn++;
+        difficulty = turn / 10; //Every 10 turns there is a chance for stronger monsters! (currently 5 difficulty levels);
+    }
+
     /**
      * Describe the current state of the player and arena
      */
@@ -164,7 +220,7 @@ public class Arena {
         }
         else if (q.size > 1)
         {
-            desc = "there is a " + q.peek().toString() + " and " + (q.size - 1) + " monsters behind it."; 
+            desc = "there is a " + q.peek().toString() + " with " + (q.size - 1) + " monsters behind it."; 
         }
         else
         {

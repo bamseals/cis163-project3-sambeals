@@ -3,36 +3,57 @@ public class Creature {
     int maxHealth = 0;
     int currentHealth = 0;
     int strength = 0;
+    int difficulty = 0;
 
     //Statuses
-    boolean isFrozen = false;
+    int isFrozen = 0;
     int onFire = 0;
+    int[] availableSpells = new int[10]; //Creatures and player can have a maximum of 10 spells
+    int knownSpells = 0;
+
+    //Difficulty level options
+    private int[] difficultyHealth = {50,80,100,200,350};
+    private int[] difficultyStrength = {10,25,50,90,200};
 
     //Descriptions
-    String[] monsterTypes = {"Goblin","Slime","Skeleton","Boar","Squid","Rat","Spider","Bandit","Ghost"};
-    String[] strengthDescs = {"Weak","Regular","Strong","Scary"};
-    String[] healthDescs= {"Near-Death","Badly-Injured","Weakened","Healthy"};
-    int monsterType;
+    String[][] monsterTypes = {
+        {"Slime","Rat","Boar","Hornet","Spider"},
+        {"Zombie","Skeleton","Wolf","Condor","Crocodile"},
+        {"Bandit","Bear","Shark","Pirate","Ghoul"},
+        {"Ogre","Vampire","Warlock","Werewolf","Knight"},
+        {"Dragon","Giant","Kraken","Lich","Phoenix"}
+    };
+    int monsterType = 0;
+
+    String[] strengthDescs = {"Sickly","Weak","Regular","Strong","Scary"};
+    String[] healthDescs = {"Starving","Hungry","Skittish","Stout","Vivacious"};
+    String[] damageDescs= {"Near-Death","Badly-Injured","Weakened","Slightly-Injured",""};
+    String healthDesc = "";
+    String strengthDesc = "";
+    String damageDesc = "";
+    
 
     /**
      * Create a random creature with random stats
      */
     public Creature(){
-        this.monsterType = App.generateRandom(1, monsterTypes.length-1);
-        this.maxHealth = App.generateRandom(1, 100);
-        this.currentHealth = this.maxHealth;
-        this.strength = App.generateRandom(1, 20);
+        this(0);
     }
 
     /**
      * Create a creature that has a higher chance of being more difficult the higher the turncount is
      * @param turn
      */
-    public Creature(int turn){
-        this.monsterType = App.generateRandom(1, monsterTypes.length-1);
-        this.maxHealth = App.generateRandom(1, 100);
+    public Creature(int difficulty){
+        //Set stats
+        this.difficulty = App.generateRandom(0, difficulty); //Monsters can be generated from lowest level to highest input difficulty
+        this.maxHealth = App.generateRandom(1, difficultyHealth[this.difficulty]);
         this.currentHealth = this.maxHealth;
-        this.strength = App.generateRandom(1, 20);
+        this.strength = App.generateRandom(1, difficultyStrength[this.difficulty]);
+        //Set Descriptions
+        this.monsterType = App.generateRandom(1, monsterTypes[this.difficulty].length - 1);
+        this.strengthDesc = determineDescByPct(this.strength, difficultyStrength[this.difficulty], strengthDescs, false);
+        this.healthDesc = determineDescByPct(this.maxHealth, difficultyHealth[this.difficulty], healthDescs, false);
     }
 
     /**
@@ -40,21 +61,60 @@ public class Creature {
      * @param health
      * @param strength
      */
-    public Creature(int turn, int health, int strength)
+    public Creature(int difficulty, int health, int strength)
     {
-        this.monsterType = App.generateRandom(1, monsterTypes.length-1);
+        this(difficulty);
         this.maxHealth = health;
         this.currentHealth = health;
         this.strength = strength;
     }
 
-    int attack(){
-        return strength;
+    public void setDamageDesc(){
+        this.damageDesc = determineDescByPct(this.currentHealth, this.maxHealth, damageDescs, true);
+    }
+    
+    private String determineDescByPct(int actual, int max, String[] descsArray,boolean healthDesc){
+        String desc = "";
+        float pct = (float) actual / max;
+        if (healthDesc && actual <= 0)
+        {
+            return "Dead";
+        }
+        if ((healthDesc && pct < 0.25) || (!healthDesc && pct < 0.2)){
+            desc = descsArray[0];
+        }
+        else if ((healthDesc && pct < 0.5) || (!healthDesc && pct < 0.4)){
+            desc = descsArray[1];
+        }
+        else if ((healthDesc && pct < 0.75) || (!healthDesc && pct < 0.6)){
+            desc = descsArray[2];
+        }
+        else if ((healthDesc && pct < 1.0) || (!healthDesc && pct < 0.8)){
+            desc = descsArray[3];
+        }
+        else{
+            desc = descsArray[4];
+        }
+        return desc;
+    }
+
+    public int attack(Creature target){
+        int damage = this.rollDamage();
+        target.hurt(damage);
+        return damage;
+    }
+
+    private int rollDamage(){
+        return App.generateRandom(1, this.strength);
     }
 
     void hurt(int damage)
     {
         this.currentHealth -= damage;
+        if (!this.isDead())
+        {
+            this.setDamageDesc();
+        }
     }
 
     boolean isDead()
@@ -64,7 +124,7 @@ public class Creature {
 
     boolean isFrozen()
     {
-        return this.isFrozen;
+        return 0 < this.isFrozen;
     }
 
     boolean isOnFire()
@@ -78,6 +138,9 @@ public class Creature {
     }
 
     public String toString(){
-        return this.monsterTypes[this.monsterType];
+        return this.damageDesc + (this.damageDesc.equals("") ? "" : " ") //Only add a space if the damage description is not empty
+        + this.healthDesc + " "
+        + this.strengthDesc + " "
+        + this.monsterTypes[this.difficulty][this.monsterType];
     }
 }

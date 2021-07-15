@@ -119,4 +119,15 @@ public class Project3Test{
         Creature dq = q.dequeue();
         assertTrue(q.isEmpty());
     }
+
+    ///// Arena Tests /////
+
+    @Test
+    public void arenatest1(){
+
+    }
+
+    ///// Creature Tests /////
+
+    ///// Player Tests /////
 }
