@@ -122,12 +122,103 @@ public class Project3Test{
 
     ///// Arena Tests /////
 
+    //Difficulty increases with enough turns
     @Test
-    public void arenatest1(){
+    public void difficultyIncrement(){
+        Arena a = new Arena();
+        for (int i = 0; i < 20; i++){
+            a.incrementTurn();
+        }
+        assertTrue(a.difficulty == 2);
+    }
 
+    //Game over is true when player takes more damage than max health
+    @Test
+    public void deadGameOver(){
+        Arena a = new Arena();
+        a.player.hurt(999);
+        assertTrue(a.isGameOver());
     }
 
     ///// Creature Tests /////
 
+    //Make sure a damage description is being set for an injured creature
+    @Test
+    public void checkDamageDesc(){
+        Creature c = new Creature();
+        c.currentHealth = 1;
+        c.setDamageDesc();
+        assertTrue(c.damageDesc == "Near-Death");
+    }
+
+    //If a creature is dead the damage description reflects this
+    @Test
+    public void checkDeathDesc(){
+        Creature c = new Creature();
+        c.currentHealth = 0;
+        c.setDamageDesc();
+        assertTrue(c.damageDesc == "Dead");
+    }
+
+    //Make sure damage stays witin the expected range
+    @Test
+    public void damageRange(){
+        Creature c = new Creature(0);
+        Creature punchingBag = new Creature();
+        int maxDamage = 0;
+        for (int i = 0; i < 100; i++){
+            int damage = c.attack(punchingBag);
+            if (damage > maxDamage){
+                maxDamage = damage;
+            }
+        }
+        assertTrue(maxDamage <= c.strength);
+
+    }
+
+    //Taking damage changes current health
+    @Test
+    public void getHurt(){
+        Creature c = new Creature();
+        int damage = c.maxHealth-1;
+        c.hurt(damage);
+        assertTrue(c.currentHealth == 1);
+    }
+
+    //Taking too much damage causes a creature to die
+    @Test
+    public void creatureDies(){
+        Creature c = new Creature();
+        c.hurt(999);
+    }
+
     ///// Player Tests /////
+
+    //Player can not level up immediately
+    @Test
+    public void noLevelOnStart(){
+        Player p = new Player();
+        assertFalse(p.gainExperience(0));
+    }
+
+    //Player can and does level up with enough experience
+    @Test
+    public void levelUp(){
+        Player p = new Player();
+        assertTrue(p.gainExperience(100));
+    }
+
+    //Make sure experience rolls over after level up
+    @Test
+    public void consecutiveLevel(){
+        Player p = new Player();
+        assertTrue(p.gainExperience(300));
+        assertTrue(p.gainExperience(0));
+    }
+
+    ///// /////
+    @Test
+    public void placeholder(){
+        assertFalse(1 == 1);
+    }
 }

@@ -8,12 +8,15 @@ public class Creature {
     //Statuses
     int isFrozen = 0;
     int onFire = 0;
+
+    //Spells
+    String[] spellNames = {"Fireball","Blizzard","Lightning","Heal"};
     int[] availableSpells = new int[10]; //Creatures and player can have a maximum of 10 spells
     int knownSpells = 0;
 
     //Difficulty level options
-    private int[] difficultyHealth = {50,80,100,200,350};
-    private int[] difficultyStrength = {10,25,50,90,200};
+    private int[] difficultyHealth = {40,70,100,200,350};
+    private int[] difficultyStrength = {20,35,65,125,200};
 
     //Descriptions
     String[][] monsterTypes = {
@@ -45,6 +48,10 @@ public class Creature {
      * @param turn
      */
     public Creature(int difficulty){
+        if (difficulty > 4)
+        {
+            difficulty = 4; //4 is currently the maximum difficulty
+        }
         //Set stats
         this.difficulty = App.generateRandom(0, difficulty); //Monsters can be generated from lowest level to highest input difficulty
         this.maxHealth = App.generateRandom(1, difficultyHealth[this.difficulty]);
@@ -73,23 +80,24 @@ public class Creature {
         this.damageDesc = determineDescByPct(this.currentHealth, this.maxHealth, damageDescs, true);
     }
     
-    private String determineDescByPct(int actual, int max, String[] descsArray,boolean healthDesc){
+    private String determineDescByPct(int actual, int max, String[] descsArray,boolean damageDesc){
         String desc = "";
         float pct = (float) actual / max;
-        if (healthDesc && actual <= 0)
+        if (damageDesc && actual <= 0)
         {
             return "Dead";
         }
-        if ((healthDesc && pct < 0.25) || (!healthDesc && pct < 0.2)){
+        //damage descriptions are determined at different percentage breakpoints than the other descriptions
+        if ((damageDesc && pct < 0.25) || (!damageDesc && pct < 0.2)){
             desc = descsArray[0];
         }
-        else if ((healthDesc && pct < 0.5) || (!healthDesc && pct < 0.4)){
+        else if ((damageDesc && pct < 0.5) || (!damageDesc && pct < 0.4)){
             desc = descsArray[1];
         }
-        else if ((healthDesc && pct < 0.75) || (!healthDesc && pct < 0.6)){
+        else if ((damageDesc && pct < 0.75) || (!damageDesc && pct < 0.6)){
             desc = descsArray[2];
         }
-        else if ((healthDesc && pct < 1.0) || (!healthDesc && pct < 0.8)){
+        else if ((damageDesc && pct < 1.0) || (!damageDesc && pct < 0.8)){
             desc = descsArray[3];
         }
         else{
@@ -111,10 +119,7 @@ public class Creature {
     void hurt(int damage)
     {
         this.currentHealth -= damage;
-        if (!this.isDead())
-        {
-            this.setDamageDesc();
-        }
+        this.setDamageDesc();
     }
 
     boolean isDead()
