@@ -119,6 +119,9 @@ public class Arena {
         this.isPlayerTurn = false;
     }
 
+    /**
+     * Player skips turn and gains a little health
+     */
     void playerWait(){
         player.currentHealth += 10;
         if (player.currentHealth > player.maxHealth)
@@ -128,6 +131,9 @@ public class Arena {
         this.isPlayerTurn = false;
     }
     
+    /**
+     * Player selects which queue/monster to attack
+     */
     void playerSelectAttack(){
         Queue<Creature> target = selectDirection("attack");
         Creature attacked = target.peek();
@@ -144,6 +150,9 @@ public class Arena {
         };
     }
     
+    /**
+     * Player selects which queue/monster to select ready spell on
+     */
     void playerSelectSpell(){
         int spell = player.availableSpells[player.knownSpells];
         if (3 == spell) //no need to select direction if healing
@@ -172,6 +181,11 @@ public class Arena {
         player.knownSpells--;
     }
 
+    /**
+     * Player selects a direction queue
+     * @param label
+     * @return
+     */
     Queue<Creature> selectDirection(String label){
         Queue<Creature> target = null;
         while (Objects.isNull(target))
@@ -198,7 +212,10 @@ public class Arena {
         return target;
     }
 
-    
+    /**
+     * Handle the removal of creature form queue and gaining experience
+     * @param direction
+     */
     void monsterDie(Queue<Creature> direction){
         Creature monster = direction.peek();
         System.out.println(monster.toString() + " has been slain!");
@@ -219,6 +236,11 @@ public class Arena {
         this.isPlayerTurn = true;
     }
 
+    /**
+     * Determine what the front monster of each queue is up to this turn
+     * @param label
+     * @param direction
+     */
     void monsterLogic(String label, Queue<Creature> direction){
         if (direction.size > 0){
             Creature monster = direction.peek();
@@ -300,6 +322,9 @@ public class Arena {
         }
     }
 
+    /**
+     * Counts turns and handles events that happen based on turn
+     */
     void incrementTurn(){
         turn++;
         difficulty = turn / 10; //Every 10 turns there is a chance for stronger monsters! (currently 5 difficulty levels);

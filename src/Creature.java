@@ -73,7 +73,7 @@ public class Creature {
     }
 
     /**
-     * Create a creature with manually set health and strength
+     * Create a creature with manually set health and strength for testing purposes
      * @param health
      * @param strength
      */
@@ -85,10 +85,21 @@ public class Creature {
         this.strength = strength;
     }
 
+    /**
+     * Determine the damage description for a monster based on its health
+     */
     public void setDamageDesc(){
         this.damageDesc = determineDescByPct(this.currentHealth, this.maxHealth, damageDescs, true);
     }
     
+    /**
+     * Select the designated description from a given array given current/max value
+     * @param actual
+     * @param max
+     * @param descsArray
+     * @param damageDesc
+     * @return
+     */
     private String determineDescByPct(int actual, int max, String[] descsArray,boolean damageDesc){
         String desc = "";
         float pct = (float) actual / max;
@@ -115,16 +126,29 @@ public class Creature {
         return desc;
     }
 
+    /**
+     * Deal damage to another creature
+     * @param target
+     * @return
+     */
     public int attack(Creature target){
         int damage = this.rollDamage();
         target.hurt(damage);
         return damage;
     }
 
+    /**
+     * Randomly generate damage based on creature strength
+     * @return
+     */
     private int rollDamage(){
         return App.generateRandom(1, this.strength);
     }
 
+    /**
+     * Take a certain amount of damage
+     * @param damage
+     */
     void hurt(int damage)
     {
         this.currentHealth -= damage;
@@ -146,6 +170,15 @@ public class Creature {
         return 0 < this.onFire;
     }
 
+    boolean canCastSpell()
+    {
+        return 0 < this.knownSpells;
+    }
+
+    /**
+     * Handle burn damage
+     * @return
+     */
     int burn(){
         int damage = this.onFire;
         this.hurt(damage);
@@ -156,11 +189,10 @@ public class Creature {
         return damage;
     }
 
-    boolean canCastSpell()
-    {
-        return 0 < this.knownSpells;
-    }
-
+    /**
+     * Learn a random spell from the list of spells
+     * @return
+     */
     int learnSpell(){
         if (this.knownSpells >= this.availableSpells.length){
             return -1;
@@ -170,7 +202,13 @@ public class Creature {
         this.availableSpells[this.knownSpells] = spell;
         return spell;
     }
-    
+   
+    /**
+     * Cast a spell
+     * @param spell
+     * @param target
+     * @return
+     */
     int castSpell(int spell, Creature target){
         switch(spell){
             case 0: //fireball
@@ -189,6 +227,11 @@ public class Creature {
         return 0;
     }
 
+    /**
+     * Creature cast fireball spell
+     * @param target
+     * @return
+     */
     int fireballCast(Creature target){
         int singe = App.generateRandom(1, this.strength);
         int burn = App.generateRandom(1, this.strength / 2);
@@ -198,6 +241,11 @@ public class Creature {
         return singe;
     }
 
+    /**
+     * Creature cast the blizzard spell
+     * @param target
+     * @return
+     */
     int blizzardCast(Creature target){
         int damage = App.generateRandom(1, this.strength);
         target.hurt(damage);
@@ -205,12 +253,21 @@ public class Creature {
         return damage;
     }
 
+    /**
+     * Creature cast the lightning spell
+     * @param target
+     * @return
+     */
     int lightningCast(Creature target){
         int damage = App.generateRandom(this.strength/2, this.strength+10);
         System.out.println(this.toString() + " shocks you with Lightning for " + damage + " damage!");
         return damage;
     }
 
+    /**
+     * Creature cast the heal spell
+     * @return
+     */
     int healCast(){
         int heal = App.generateRandom(this.strength/2, this.strength);
         this.currentHealth += heal;
@@ -221,49 +278,9 @@ public class Creature {
         return heal;
     }
 
-    String listSpells(){
-        String spellList = "";
-        if (1 > this.knownSpells){
-            spellList = "no known spells";
-        }
-        else
-        {
-            boolean fireReady = false;
-            boolean blizzReady = false;
-            boolean ltngReady = false;
-            boolean healReady = false;
-            for (int i = 0; i < this.knownSpells; i++){
-                switch(this.availableSpells[i]){
-                    case 0:
-                        fireReady = true;
-                        break;
-                    case 1:
-                        blizzReady = true;
-                        break;
-                    case 2:
-                        ltngReady = true;
-                        break;
-                    case 3:
-                        healReady = true;
-                        break;
-                }
-            }
-            if (fireReady){
-                spellList += " Fireball ";
-            }
-            if (blizzReady){
-                spellList += " Blizzard ";
-            }
-            if (ltngReady){
-                spellList += " Lightning ";
-            }
-            if (healReady){
-                spellList += " Heal ";
-            }
-        }
-        return spellList;
-    }
-
+    /**
+     * Describe the creature
+     */
     public String toString(){
         return this.damageDesc + (this.damageDesc.equals("") ? "" : " ") //Only add a space if the damage description is not empty
         + this.healthDesc + " "

@@ -145,7 +145,7 @@ public class Project3Test{
     //Make sure a damage description is being set for an injured creature
     @Test
     public void checkDamageDesc(){
-        Creature c = new Creature();
+        Creature c = new Creature(1,100,100);
         c.currentHealth = 1;
         c.setDamageDesc();
         assertTrue(c.damageDesc == "Near-Death");
@@ -192,6 +192,32 @@ public class Project3Test{
         c.hurt(999);
     }
 
+    //Creature takes damage from fire
+    @Test
+    public void creatureBurn(){
+        Creature c = new Creature(1,200,200);
+        c.onFire = 100;
+        c.burn();
+        assertTrue(c.onFire == 50 && c.currentHealth == 100);
+    }
+
+    //Creature has higher health after healing
+    @Test
+    public void creatureHeal(){
+        Creature c = new Creature(1,200,200);
+        c.hurt(199);
+        c.healCast();
+        assertTrue(c.currentHealth > 1);
+    }
+
+    //Creature does not heal above max health
+    @Test
+    public void creatureHealCap(){
+        Creature c = new Creature(1,200,200);
+        c.healCast();
+        assertTrue(c.currentHealth == 200);
+    }
+
     ///// Player Tests /////
 
     //Player can not level up immediately
@@ -219,6 +245,6 @@ public class Project3Test{
     ///// /////
     @Test
     public void placeholder(){
-        assertFalse(1 == 1);
+        //assertFalse(1 == 1);
     }
 }

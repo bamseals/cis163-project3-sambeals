@@ -4,13 +4,21 @@ public class Player extends Creature{
     int experience = 0;
     int experienceToNext = 100;
 
+    private final int HEALTH_PER_LEVEL = 50;
+    private final int DAMAGE_PER_LEVEL = 10;
+    private final int EXP_PER_LEVEL = 100;
+
     public Player(){
         this.maxHealth = 300;
         this.currentHealth = this.maxHealth;
         this.strength = 30;
     }
 
-    //add experience, return true if leveled up or false if not
+    /**
+     * Add experience, return true if leveled up or false if not
+     * @param xp
+     * @return
+     */
     public boolean gainExperience(int xp){
         this.experience += xp;
         if (this.experience >= experienceToNext){
@@ -23,15 +31,21 @@ public class Player extends Creature{
         }
     }
 
+    /**
+     * Handle calculations of leveling up
+     */
     public void levelUp(){
         this.level++;
-        this.maxHealth += 50;
-        this.currentHealth += 50;
-        this.strength += 10;
+        this.maxHealth += HEALTH_PER_LEVEL;
+        this.currentHealth += HEALTH_PER_LEVEL;
+        this.strength += DAMAGE_PER_LEVEL;
         this.experience -= experienceToNext;
-        this.experienceToNext = level * 100;
+        this.experienceToNext = level * EXP_PER_LEVEL;
     }
 
+    /**
+     * Player cast fireball spell
+     */
     int fireballCast(Creature target){
         int singe = App.generateRandom(this.strength/2,this.strength);
         int burn = App.generateRandom(1, this.strength / 2);
@@ -41,6 +55,9 @@ public class Player extends Creature{
         return singe;
     }
 
+    /**
+     * Player cast blizzard spell
+     */
     int blizzardCast(Creature target){
         int damage = App.generateRandom(1, this.strength);
         int freeze = App.generateRandom(1, this.level);
@@ -50,6 +67,9 @@ public class Player extends Creature{
         return damage;
     }
 
+    /**
+     * Player cast lightning spell
+     */
     int lightningCast(Creature target){
         int damage = App.generateRandom(this.strength, this.strength * 3);
         target.hurt(damage);
@@ -57,6 +77,9 @@ public class Player extends Creature{
         return damage;
     }
 
+    /**
+     * Player cast heal spell
+     */
     int healCast(){
         int heal = App.generateRandom(this.strength/2, this.strength);
         this.currentHealth += heal;
