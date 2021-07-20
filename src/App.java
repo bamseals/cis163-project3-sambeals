@@ -1,3 +1,4 @@
+import java.util.Random;
 public class App {
     public static void main(String[] args) throws Exception {
         Arena game = new Arena();
@@ -5,6 +6,7 @@ public class App {
     }
 
     public static int generateRandom(int min,int max){
-        return (int) ((Math.random() * (max - min)) + min);
+        Random rand = new Random();
+        return (min + rand.nextInt((max - min) + 1));
     }
 }

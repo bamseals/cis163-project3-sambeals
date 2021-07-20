@@ -62,6 +62,9 @@ public class Arena {
         incrementTurn();
         describeArenaState();
         //If you are frozen the turn ends right here;
+        if (player.isOnFire()){
+            System.out.println("You are on fire and burn for "+player.burn()+"damage");
+        }
         if (player.isFrozen())
         {
             System.out.println("You are frozen and spend the turn thawing out.");
@@ -73,13 +76,7 @@ public class Arena {
         else if (north.size == 0 && east.size == 0 && south.size == 0 && west.size == 0)
         {
             System.out.println("With no enemies this turn you rest and recover some health.");
-            
-            player.currentHealth += 10;
-            if (player.currentHealth < player.maxHealth)
-            {
-                player.currentHealth = player.maxHealth;
-            }
-            this.isPlayerTurn = false;
+            playerWait();
             return;
         }
         System.out.println("What would you like to do? (attack, spell, quit)");
@@ -90,10 +87,19 @@ public class Arena {
                 playerSelectAttack();
                 break;
             case "spell":
-                System.out.println("player spells go here");
+                if (player.canCastSpell()){
+                    playerSelectSpell();
+                }
+                else{
+                    System.out.println("You do not have any spells right now, select another action");
+                    turn--;
+                    return;
+                }
                 break;
             case "wait":
-                System.out.println("wait to gain health");
+                System.out.println("You wait the turn and regain a small amount of health");
+                playerWait();
+                break;
             case "quit":
                 this.playerQuit = true;
                 break;
@@ -112,12 +118,65 @@ public class Arena {
         }
         this.isPlayerTurn = false;
     }
+
+    void playerWait(){
+        player.currentHealth += 10;
+        if (player.currentHealth > player.maxHealth)
+        {
+            player.currentHealth = player.maxHealth;
+        }
+        this.isPlayerTurn = false;
+    }
     
     void playerSelectAttack(){
+        Queue<Creature> target = selectDirection("attack");
+        Creature attacked = target.peek();
+        if (Objects.isNull(attacked))
+        {
+            System.out.println("There are no monsters in that direction, choose again");
+            playerSelectAttack();
+            return;
+        } 
+        int damage = player.attack(attacked);
+        System.out.println("You deal " + damage + " damage to " + attacked.toString() + "!");
+        if (attacked.isDead()){
+            monsterDie(target);
+        };
+    }
+    
+    void playerSelectSpell(){
+        int spell = player.availableSpells[player.knownSpells];
+        if (3 == spell) //no need to select direction if healing
+        {
+            player.healCast();
+        }
+        else
+        {
+            Queue<Creature> target = selectDirection("cast "+player.spells[spell]);
+            Creature attacked = target.peek();
+            switch(spell){
+                case 0:
+                    player.fireballCast(attacked);
+                    break;
+                case 1:
+                    player.blizzardCast(attacked);
+                    break;
+                case 2:
+                    player.lightningCast(attacked);
+                    break;
+            }
+            if (attacked.isDead()){
+                monsterDie(target);
+            }
+        }
+        player.knownSpells--;
+    }
+
+    Queue<Creature> selectDirection(String label){
         Queue<Creature> target = null;
         while (Objects.isNull(target))
         {
-            System.out.println("Which direction will you attack?");
+            System.out.println("Which direction will you "+label+"?");
             String s = scan.next();
             switch (s.toLowerCase()){
                 case "north":
@@ -136,42 +195,65 @@ public class Arena {
                     System.out.println("Please input North, South, East, or West.");
             }
         }
-        Creature attacked = target.peek();
-        if (Objects.isNull(attacked))
-        {
-            System.out.println("There are no monsters in that direction, choose again");
-            playerSelectAttack();
-            return;
-        } 
-        int damage = player.attack(attacked);
-        System.out.println("You deal " + damage + " damage to " + attacked.toString() + "!");
-        if (attacked.isDead()){
-            System.out.println(attacked.toString() + " has been slain!");
-            experienceThisTurn += attacked.strength + attacked.maxHealth;
-            target.dequeue();
-            monstersSlain++;
-        };
+        return target;
     }
 
     
+    void monsterDie(Queue<Creature> direction){
+        Creature monster = direction.peek();
+        System.out.println(monster.toString() + " has been slain!");
+        experienceThisTurn += monster.strength + monster.maxHealth;
+        direction.dequeue();
+        monstersSlain++;
+    }
 
     /**
-     * Determine action taken by monsters
+     * Determine action taken by monsters on their turn
      */
     void monsterTurn(){
-        monsterAttack("North", north);
-        monsterAttack("East", east);
-        monsterAttack("South", south);
-        monsterAttack("West", west);
+        monsterLogic("North", north);
+        monsterLogic("East", east);
+        monsterLogic("South", south);
+        monsterLogic("West", west);
         createMonsters(this.difficulty);
         this.isPlayerTurn = true;
     }
 
-    void monsterAttack(String label, Queue<Creature> direction){
+    void monsterLogic(String label, Queue<Creature> direction){
         if (direction.size > 0){
             Creature monster = direction.peek();
-            int damage = monster.attack(player);
-            System.out.println(monster.toString() + " does " + damage + " damage to you from the " + label);
+            if (monster.isOnFire()) //If monster is burnt handle burn damage
+            {
+                System.out.println(monster.toString() + " is on fire and burns for " + monster.burn() + " damage");
+                if (monster.isDead())
+                {
+                    monsterDie(direction);
+                    return;
+                }
+            }
+            if (monster.isFrozen()) //If monster is frozen skip its actions
+            {
+                System.out.println(monster.toString() + " is frozen and spends the turn thawing");
+                monster.isFrozen--;
+                return;
+            }
+            if (monster.canCastSpell()){ //If monster has a spell it will cast it
+                int spell = monster.availableSpells[monster.knownSpells];
+                if ("Heal" == monster.spells[spell] && monster.currentHealth >= monster.maxHealth) //If monster can heal but has no damage just attack
+                {
+                    System.out.println(monster.toString() + " attacks you for " + monster.attack(player) + " damage from the " + label);
+                }
+                else
+                {
+                    monster.knownSpells--;
+                    monster.castSpell(spell, player);
+                }
+                
+            }
+            else //Otherwise it will attack
+            {
+                System.out.println(monster.toString() + " attacks you for " + monster.attack(player) + " damage from the " + label);
+            }
         }
     }
 
@@ -221,6 +303,9 @@ public class Arena {
     void incrementTurn(){
         turn++;
         difficulty = turn / 10; //Every 10 turns there is a chance for stronger monsters! (currently 5 difficulty levels);
+        if (turn % TURNS_NEW_SPELL == 0 && player.knownSpells < player.availableSpells.length){
+            System.out.println("This turn you ready a "+player.spells[player.learnSpell()] + " spell");
+        }
     }
 
     /**
@@ -229,14 +314,13 @@ public class Arena {
     void describeArenaState(){
         System.out.println("----- Turn " + this.turn + " -----");
         System.out.println("You are feeling " + ("" != player.damageDesc ? player.damageDesc : "Uninjured") + " ("+player.currentHealth+"/"+player.maxHealth+" hp), Level "+player.level+" ("+player.experience+"/"+player.experienceToNext+" xp)");
+        if (player.canCastSpell()){
+            System.out.println("You are prepared to cast " + player.spells[player.availableSpells[player.knownSpells]]);
+        }
         System.out.println("To the North " + describeDirection(north));
         System.out.println("To the East " + describeDirection(east));
         System.out.println("To the South " + describeDirection(south));
         System.out.println("To the West " + describeDirection(west));
-    }
-
-    void determinePlayerSpells(){
-        
     }
 
     /**

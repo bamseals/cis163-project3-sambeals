@@ -10,13 +10,15 @@ public class Creature {
     int onFire = 0;
 
     //Spells
-    String[] spellNames = {"Fireball","Blizzard","Lightning","Heal"};
+    private final int CHANCE_HAS_SPELL = 10;
+    String[] spells = {"Fireball","Blizzard","Lightning","Heal"};
     int[] availableSpells = new int[10]; //Creatures and player can have a maximum of 10 spells
     int knownSpells = 0;
-
+    
     //Difficulty level options
-    private int[] difficultyHealth = {40,70,100,200,350};
-    private int[] difficultyStrength = {20,35,65,125,200};
+    
+    private final int[] difficultyHealth = {40,70,100,200,350};
+    private final int[] difficultyStrength = {20,35,65,125,200};
 
     //Descriptions
     String[][] monsterTypes = {
@@ -48,19 +50,26 @@ public class Creature {
      * @param turn
      */
     public Creature(int difficulty){
-        if (difficulty > 4)
+        int difficultyRoll = App.generateRandom(0, difficulty); //Roll for difficulty so that as turns go monsters have a higher chance of being difficult
+        if (difficultyRoll > 4)
         {
-            difficulty = 4; //4 is currently the maximum difficulty
+            difficultyRoll = 4; //4 is currently the maximum difficulty
         }
         //Set stats
-        this.difficulty = App.generateRandom(0, difficulty); //Monsters can be generated from lowest level to highest input difficulty
+        this.difficulty = App.generateRandom(0, difficultyRoll); //Monsters can be generated from lowest level to highest input difficulty
         this.maxHealth = App.generateRandom(1, difficultyHealth[this.difficulty]);
         this.currentHealth = this.maxHealth;
         this.strength = App.generateRandom(1, difficultyStrength[this.difficulty]);
         //Set Descriptions
-        this.monsterType = App.generateRandom(1, monsterTypes[this.difficulty].length - 1);
+        this.monsterType = App.generateRandom(0, monsterTypes[this.difficulty].length-1);
         this.strengthDesc = determineDescByPct(this.strength, difficultyStrength[this.difficulty], strengthDescs, false);
         this.healthDesc = determineDescByPct(this.maxHealth, difficultyHealth[this.difficulty], healthDescs, false);
+        //Generate Spells
+        int spellChance = (1+difficulty) * CHANCE_HAS_SPELL;
+        int spellRoll = App.generateRandom(1, 100);
+        if (spellChance > spellRoll){
+            this.learnSpell();
+        }
     }
 
     /**
@@ -137,9 +146,122 @@ public class Creature {
         return 0 < this.onFire;
     }
 
+    int burn(){
+        int damage = this.onFire;
+        this.hurt(damage);
+        this.onFire = this.onFire / 2;
+        if (this.onFire < 2){
+            this.onFire = 0;
+        }
+        return damage;
+    }
+
     boolean canCastSpell()
     {
-        return false;
+        return 0 < this.knownSpells;
+    }
+
+    int learnSpell(){
+        if (this.knownSpells >= this.availableSpells.length){
+            return -1;
+        }
+        int spell = App.generateRandom(0, this.spells.length-1);
+        this.knownSpells += 1;;
+        this.availableSpells[this.knownSpells] = spell;
+        return spell;
+    }
+    
+    int castSpell(int spell, Creature target){
+        switch(spell){
+            case 0: //fireball
+                this.fireballCast(target);
+                break;
+            case 1: //blizzard
+                this.blizzardCast(target);
+                break;
+            case 2: //lightning
+                this.lightningCast(target);
+                break;
+            case 3: //heal
+                this.healCast();
+                break;
+        }
+        return 0;
+    }
+
+    int fireballCast(Creature target){
+        int singe = App.generateRandom(1, this.strength);
+        int burn = App.generateRandom(1, this.strength / 2);
+        target.hurt(singe);
+        target.onFire += burn;
+        System.out.println(this.toString() + " singes you with a Fireball for " + singe + " damage, and ignites you for "+burn+"!");
+        return singe;
+    }
+
+    int blizzardCast(Creature target){
+        int damage = App.generateRandom(1, this.strength);
+        target.hurt(damage);
+        System.out.println(this.toString() + " freezes you with a Blizzard for a turn and " + damage + " damage!");
+        return damage;
+    }
+
+    int lightningCast(Creature target){
+        int damage = App.generateRandom(this.strength/2, this.strength+10);
+        System.out.println(this.toString() + " shocks you with Lightning for " + damage + " damage!");
+        return damage;
+    }
+
+    int healCast(){
+        int heal = App.generateRandom(this.strength/2, this.strength);
+        this.currentHealth += heal;
+        if (this.maxHealth < this.currentHealth){
+            this.currentHealth = this.maxHealth;
+        }
+        System.out.println(this.toString() + " heals itself for " + heal + " health!");
+        return heal;
+    }
+
+    String listSpells(){
+        String spellList = "";
+        if (1 > this.knownSpells){
+            spellList = "no known spells";
+        }
+        else
+        {
+            boolean fireReady = false;
+            boolean blizzReady = false;
+            boolean ltngReady = false;
+            boolean healReady = false;
+            for (int i = 0; i < this.knownSpells; i++){
+                switch(this.availableSpells[i]){
+                    case 0:
+                        fireReady = true;
+                        break;
+                    case 1:
+                        blizzReady = true;
+                        break;
+                    case 2:
+                        ltngReady = true;
+                        break;
+                    case 3:
+                        healReady = true;
+                        break;
+                }
+            }
+            if (fireReady){
+                spellList += " Fireball ";
+            }
+            if (blizzReady){
+                spellList += " Blizzard ";
+            }
+            if (ltngReady){
+                spellList += " Lightning ";
+            }
+            if (healReady){
+                spellList += " Heal ";
+            }
+        }
+        return spellList;
     }
 
     public String toString(){
