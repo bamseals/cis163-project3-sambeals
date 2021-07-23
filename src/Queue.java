@@ -2,12 +2,18 @@ import java.util.LinkedList;
 
 public class Queue <T> {
 
+    Node head;
+    Node tail;
     int size = 0;
 
-    LinkedList<T> linkedList;
+    class Node{
+        Node next;
+        T data;
+    }
 
     public Queue(){
-        this.linkedList = new LinkedList<T>();
+        this.head = null;
+        this.tail = null;
     }
 
     /**
@@ -15,7 +21,18 @@ public class Queue <T> {
      * @param item
      */
     public void enqueue(T item){
-        linkedList.addLast(item);
+        Node newNode = new Node();
+        newNode.data = item;
+        if (this.size == 0)
+        {
+            this.head = newNode;
+            this.tail = newNode;
+        }
+        else
+        {
+            this.tail.next = newNode;
+            this.tail = newNode;
+        }
         this.size++;
     }
 
@@ -24,13 +41,24 @@ public class Queue <T> {
      * @return
      */
     T dequeue(){
-        try {
-            T first = linkedList.pop();
-            this.size--;
-            return first;
-        }
-        catch(Exception e) {
+        if (this.size == 0)
+        {
             return null;
+        }
+        else
+        {
+            T data = this.head.data;
+            if (this.head.next == null) //If there are no more nodes after the first
+            {
+                this.head = null;
+                this.tail = null;
+            }
+            else //If there is a node after the head, set it to the new head
+            {
+                this.head = this.head.next;
+            }
+            this.size--;
+            return data;
         }
     }
 
@@ -39,8 +67,12 @@ public class Queue <T> {
      * @return
      */
     T peek(){
-        T first = linkedList.peek();
-        return first;
+        if (this.size == 0){
+            return null;
+        }
+        else{
+            return this.head.data;
+        }
     }
 
 
