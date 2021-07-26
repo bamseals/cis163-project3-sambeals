@@ -257,9 +257,8 @@ public class Arena {
             {
                 System.out.println(monster.toString() + " is frozen and spends the turn thawing");
                 monster.isFrozen--;
-                return;
             }
-            if (monster.canCastSpell()){ //If monster has a spell it will cast it
+            else if (monster.canCastSpell()){ //If monster has a spell it will cast it
                 int spell = monster.availableSpells[monster.knownSpells];
                 if ("Heal" == monster.spells[spell] && monster.currentHealth >= monster.maxHealth) //If monster can heal but has no damage just attack
                 {

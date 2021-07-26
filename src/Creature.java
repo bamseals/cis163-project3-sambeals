@@ -249,6 +249,7 @@ public class Creature {
     int blizzardCast(Creature target){
         int damage = App.generateRandom(1, this.strength);
         target.hurt(damage);
+        target.isFrozen++;
         System.out.println(this.toString() + " freezes you with a Blizzard for a turn and " + damage + " damage!");
         return damage;
     }

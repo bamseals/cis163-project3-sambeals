@@ -1,8 +1,5 @@
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 public class Project3Test{
 
@@ -240,6 +237,14 @@ public class Project3Test{
         Player p = new Player();
         assertTrue(p.gainExperience(300));
         assertTrue(p.gainExperience(0));
+    }
+
+    //Player freeze
+    @Test
+    public void playerFreeze(){
+        Player p = new Player();
+        p.isFrozen += 2;
+        assertTrue(p.isFrozen());
     }
 
     ///// /////

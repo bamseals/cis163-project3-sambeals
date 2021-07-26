@@ -1,9 +1,7 @@
-import java.util.LinkedList;
-
 public class Queue <T> {
 
-    Node head;
-    Node tail;
+    Node head; //Node at front of queue
+    Node tail; //Node at end of queue
     int size = 0;
 
     class Node{
