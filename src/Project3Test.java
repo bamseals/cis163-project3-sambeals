@@ -215,6 +215,14 @@ public class Project3Test{
         assertTrue(c.currentHealth == 200);
     }
 
+    //Make sure creature counts as frozen
+    @Test
+    public void creatureFreeze(){
+        Creature c = new Creature();
+        c.isFrozen = 3;
+        assertTrue(c.isFrozen());
+    }
+
     ///// Player Tests /////
 
     //Player can not level up immediately
